@@ -24,7 +24,9 @@ import { workspaceFilesQuery } from '../api/workspaceFiles'
 import { useWorkspace } from '@modules/workspace/hooks/useWorkspace'
 import { FolderBreadcrumbs } from '../components/FileManager/FolderBreadcrumbs'
 import { FolderEmptyState } from '../components/FileManager/FolderEmptyState'
+import { NotFoundState } from '../components/FileManager/NotFoundState'
 import { FolderListSkeleton, FileListSkeleton } from '../components/FileManager/ListSkeletons'
+import { ButtonSpinner } from '@shared/ui/buttons/ButtonSpinner'
 import { useFilesPageClickHandler } from '../hooks/useFilesPageClickHandler'
 import { useWorkspaceRoutes } from '@modules/workspace/hooks/useWorkspaceRoutes'
 import { useFileViewStore, FileViewMode } from '../stores/useFileViewStore'
@@ -186,9 +188,17 @@ export const WorkspaceFilesPage = () => {
     if (folderId && !isSuccess) {
         return (
             <LayoutBodyContainer>
-                <div className='flex grow items-center justify-center'>
-                    { deferredIsLoading ? 'Loading...' : 'Error loading folder' }
-                </div>
+                { deferredIsLoading ? (
+                    <div className='flex grow items-center justify-center text-gray-400'>
+                        <ButtonSpinner className='w-8 h-8 text-gray-300' />
+                    </div>
+                ) : (
+                    <NotFoundState
+                        title='Folder not found'
+                        message='This folder doesn’t exist or may have been deleted.'
+                        action={ { label: 'Back to files', to: routes.files } }
+                    />
+                ) }
             </LayoutBodyContainer>
         )
     }
@@ -196,9 +206,11 @@ export const WorkspaceFilesPage = () => {
     if (folderData && folderData.folder.deletedAt) {
         return (
             <LayoutBodyContainer>
-                <div className='flex grow items-center justify-center'>
-                    This folder has been deleted
-                </div>
+                <NotFoundState
+                    title='Folder not found'
+                    message='This folder has been deleted.'
+                    action={ { label: 'Back to files', to: routes.files } }
+                />
             </LayoutBodyContainer>
         )
     }

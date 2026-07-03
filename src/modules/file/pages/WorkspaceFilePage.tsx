@@ -19,6 +19,7 @@ import { RenameFileModal } from '../components/modals/RenameFileModal'
 import { MoveFileModal } from '../components/modals/MoveFileModal'
 import { FileMetaTable, FilePlaylists } from '../components/FileMeta'
 import { FolderBreadcrumbs } from '../components/FileManager/FolderBreadcrumbs'
+import { NotFoundState } from '../components/FileManager/NotFoundState'
 
 const FilePreview = ({ file }: { file: WorkspaceFile }) => {
     const [loading, setLoading] = useState(true)
@@ -96,16 +97,11 @@ export const WorkspaceFilePage = () => {
     if (isError || !file) {
         return (
             <LayoutBodyContainer>
-                <div className='flex flex-col grow items-center justify-center gap-4 text-gray-500'>
-                    <div>This file could not be found.</div>
-                    <Button
-                        to={ routes.files }
-                        color='secondary'
-                        variant='soft'
-                    >
-                        Back to files
-                    </Button>
-                </div>
+                <NotFoundState
+                    title='File not found'
+                    message='This file doesn’t exist or may have been deleted.'
+                    action={ { label: 'Back to files', to: routes.files } }
+                />
             </LayoutBodyContainer>
         )
     }

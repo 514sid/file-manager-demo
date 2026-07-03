@@ -2,6 +2,7 @@ import { NavLink, Outlet } from 'react-router'
 import { useWorkspaceRoutes } from '@modules/workspace/hooks/useWorkspaceRoutes'
 import { demoDb } from '@/demo/db'
 import { TbFolder, TbCloudUpload, TbRefresh } from 'react-icons/tb'
+import { GlobalContextMenu } from '@shared/components/GlobalContextMenu'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     [
@@ -54,6 +55,7 @@ export const DemoLayout = () => {
             <main className='px-4'>
                 <Outlet />
             </main>
+            <GlobalContextMenu />
         </div>
     )
 }
