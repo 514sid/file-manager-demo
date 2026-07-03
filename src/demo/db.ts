@@ -265,6 +265,19 @@ export const demoDb = {
         save(db)
     },
 
+    renameFolder(folderId: string, name: string): Folder | null {
+        const db = load()
+        const raw = db.folders.find(f => f.id === folderId)
+
+        if (!raw) return null
+
+        raw.name = name
+        raw.updatedAt = new Date().toISOString()
+        save(db)
+
+        return toFolder(raw)
+    },
+
     renameFile(fileId: string, name: string): WorkspaceFile | null {
         const db = load()
         const raw = db.files.find(f => f.id === fileId)

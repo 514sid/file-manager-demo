@@ -1,21 +1,24 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useWorkspace } from '@modules/workspace/hooks/useWorkspace'
+import { useSelectionStore } from '@stores/useSelectionStore'
 import { ModalClose } from '@shared/ui/modal/Modal'
 import { Button } from '@shared/ui/buttons/Button'
 import { TbFolder, TbHome, TbCheck } from 'react-icons/tb'
 import { allFoldersQuery } from '../../api/allFolders'
 import { moveFilesRequest } from '../../api/moveFiles'
-import { Folder, WorkspaceFile } from '../../types'
+import { moveFoldersRequest } from '../../api/moveFolders'
+import { Folder } from '../../types'
+import { MoveTarget } from '../../stores/useEntityModalStore'
 
 type Props = {
-    file: WorkspaceFile
+    target: MoveTarget
     onClose: () => void
 }
 
 type TreeRow = { folder: Folder, depth: number }
 
-const buildTree = (folders: Folder[]): TreeRow[] => {
+const buildTree = (folders: Folder[], excluded: Set<string>): TreeRow[] => {
     const byParent = new Map<string | null, Folder[]>()
 
     folders.forEach(folder => {
@@ -32,6 +35,7 @@ const buildTree = (folders: Folder[]): TreeRow[] => {
         const children = (byParent.get(parentId) ?? []).sort((a, b) => a.name.localeCompare(b.name))
 
         children.forEach(folder => {
+            if (excluded.has(folder.id)) return
             rows.push({ folder, depth })
             walk(folder.id, depth + 1)
         })
@@ -42,37 +46,61 @@ const buildTree = (folders: Folder[]): TreeRow[] => {
     return rows
 }
 
-export const MoveFileModal = ({ file, onClose }: Props) => {
+const collectDescendants = (folders: Folder[], rootIds: string[]): Set<string> => {
+    const excluded = new Set(rootIds)
+    let changed = true
+
+    while (changed) {
+        changed = false
+        folders.forEach(folder => {
+            if (folder.parentId && excluded.has(folder.parentId) && !excluded.has(folder.id)) {
+                excluded.add(folder.id)
+                changed = true
+            }
+        })
+    }
+
+    return excluded
+}
+
+export const MoveEntitiesModal = ({ target, onClose }: Props) => {
     const workspace = useWorkspace()
     const queryClient = useQueryClient()
-    const [target, setTarget] = useState<string | null>(file.folderId)
+    const clearSelection = useSelectionStore((state) => state.clearSelection)
+    const [destination, setDestination] = useState<string | null>(target.currentParentId)
 
     const { data: folders = [] } = useQuery(allFoldersQuery({ workspaceId: workspace.id }))
-    const rows = buildTree(folders)
+
+    const excluded = collectDescendants(folders, target.folderIds)
+    const rows = buildTree(folders, excluded)
 
     const { mutate, isPending } = useMutation({
-        mutationFn: () => moveFilesRequest({
-            fileIds: [file.id],
-            targetFolderId: target,
-            workspaceId: workspace.id
-        }),
+        mutationFn: async () => {
+            if (target.fileIds.length) {
+                await moveFilesRequest({ fileIds: target.fileIds, targetFolderId: destination, workspaceId: workspace.id })
+            }
+            if (target.folderIds.length) {
+                await moveFoldersRequest({ folderIds: target.folderIds, targetFolderId: destination, workspaceId: workspace.id })
+            }
+        },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['workspaceFile'] })
             queryClient.invalidateQueries({ queryKey: ['workspaceFiles'] })
             queryClient.invalidateQueries({ queryKey: ['workspaceFolders'] })
+            queryClient.invalidateQueries({ queryKey: ['workspaceFile'] })
+            clearSelection()
             onClose()
         }
     })
 
-    const unchanged = target === file.folderId
+    const unchanged = destination === target.currentParentId
 
     const Option = ({ id, label, depth, icon }: { id: string | null, label: string, depth: number, icon: React.ReactNode }) => {
-        const selected = target === id
+        const selected = destination === id
 
         return (
             <button
                 type='button'
-                onClick={ () => setTarget(id) }
+                onClick={ () => setDestination(id) }
                 style={ { paddingLeft: 12 + depth * 20 } }
                 className={ [
                     'w-full flex items-center gap-2 pr-3 py-2 rounded-lg text-sm text-left transition-colors',

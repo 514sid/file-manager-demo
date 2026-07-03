@@ -16,7 +16,7 @@ import { workspaceFolderQuery } from '../api/workspaceFolder'
 import { deleteFilesRequest } from '../api/deleteFiles'
 import { WorkspaceFile } from '../types'
 import { RenameFileModal } from '../components/modals/RenameFileModal'
-import { MoveFileModal } from '../components/modals/MoveFileModal'
+import { MoveEntitiesModal } from '../components/modals/MoveEntitiesModal'
 import { FileMetaTable, FilePlaylists } from '../components/FileMeta'
 import { FolderBreadcrumbs } from '../components/FileManager/FolderBreadcrumbs'
 import { NotFoundState } from '../components/FileManager/NotFoundState'
@@ -65,14 +65,15 @@ export const WorkspaceFilePage = () => {
     const [renameOpen, setRenameOpen] = useState(false)
     const [moveOpen, setMoveOpen] = useState(false)
 
-    const { data: file, isLoading, isError } = useQuery(workspaceFileQuery({
-        fileId: fileId!,
-        workspaceId: workspace.id,
-    }))
+    const { data: file, isLoading, isError } = useQuery({
+        ...workspaceFileQuery({ fileId: fileId!, workspaceId: workspace.id }),
+        retry: false,
+    })
 
     const { data: folderData } = useQuery({
         ...workspaceFolderQuery({ folderId: file?.folderId as string, workspaceId: workspace.id }),
         enabled: !!file?.folderId,
+        retry: false,
     })
 
     const { mutate: deleteFile, isPending: isDeleting } = useMutation({
@@ -215,8 +216,8 @@ export const WorkspaceFilePage = () => {
                 onOpenChange={ setMoveOpen }
             >
                 <div className='w-[500px] max-w-full'>
-                    <MoveFileModal
-                        file={ file }
+                    <MoveEntitiesModal
+                        target={ { fileIds: [file.id], folderIds: [], currentParentId: file.folderId } }
                         onClose={ () => setMoveOpen(false) }
                     />
                 </div>

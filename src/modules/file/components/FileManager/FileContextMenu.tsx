@@ -8,6 +8,8 @@ import { useConfirmationDialogStore } from '@stores/useConfirmationDialogStore'
 import { PaginationMeta } from '@/types'
 import { useNavigate } from 'react-router'
 import { useWorkspaceRoutes } from '@modules/workspace/hooks/useWorkspaceRoutes'
+import { useParams } from 'react-router'
+import { useEntityModalStore } from '@modules/file/stores/useEntityModalStore'
 
 interface FileContextMenuProps {
     anchorPoint: { x: number; y: number }
@@ -26,6 +28,8 @@ export const FileContextMenu = ({ anchorPoint, open, onClose, data }: FileContex
     const queryClient = useQueryClient()
     const navigate = useNavigate()
     const routes = useWorkspaceRoutes()
+    const params = useParams<{ folderId?: string }>()
+    const openModal = useEntityModalStore((state) => state.openModal)
 
     const { mutate, isPending } = useMutation({
         mutationFn: (data: DeleteFilesRequestData) => deleteFilesRequest(data),
@@ -101,10 +105,10 @@ export const FileContextMenu = ({ anchorPoint, open, onClose, data }: FileContex
     const options = [
         ...(isSingle ? [
             { label: 'Open', action: () => navigate(routes.file(clickedFile.id)) },
-            { label: 'Rename', action: () => console.log('Rename', filesToActOn) },
+            { label: 'Rename', action: () => openModal({ kind: 'renameFile', file: filesToActOn[0] }) },
             { label: 'Download', action: () => console.log('Download', filesToActOn) },
         ] : []),
-        { label: 'Move', action: () => console.log('Move', filesToActOn) },
+        { label: 'Move', action: () => openModal({ kind: 'move', target: { fileIds: filesToActOn.map(f => f.id), folderIds: [], currentParentId: params.folderId || null } }) },
         { label: 'Delete', action: handleDelete, disabled: isPending },
     ]
 

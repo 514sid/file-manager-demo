@@ -3,6 +3,7 @@ import { useWorkspaceRoutes } from '@modules/workspace/hooks/useWorkspaceRoutes'
 import { demoDb } from '@/demo/db'
 import { TbFolder, TbCloudUpload, TbRefresh } from 'react-icons/tb'
 import { GlobalContextMenu } from '@shared/components/GlobalContextMenu'
+import { GlobalEntityModals } from '@modules/file/components/FileManager/GlobalEntityModals'
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     [
@@ -56,6 +57,7 @@ export const DemoLayout = () => {
                 <Outlet />
             </main>
             <GlobalContextMenu />
+            <GlobalEntityModals />
         </div>
     )
 }

@@ -17,7 +17,6 @@ import { FilePreviewModal } from '../components/FilePreviewModal'
 import { WorkspaceFile, ParentFolderTreeResult, FolderWithChildrenCount } from '../types'
 import { useParams, useNavigate } from 'react-router'
 import { useQuery, useSuspenseQuery, QueryErrorResetBoundary } from '@tanstack/react-query'
-import { useDeferredLoading } from '@shared/hooks/useDeferredLoading'
 import { workspaceFolderQuery } from '../api/workspaceFolder'
 import { workspaceFoldersQuery } from '../api/workspaceFolders'
 import { workspaceFilesQuery } from '../api/workspaceFiles'
@@ -160,13 +159,12 @@ export const WorkspaceFilesPage = () => {
     const { modalFile, openModal, closeModal } = useFileViewerModal()
     const workspace = useWorkspace()
     
-    const { data: folderData, isLoading, isSuccess } = useQuery({
+    const { data: folderData, isError, isSuccess } = useQuery({
         ...workspaceFolderQuery({ folderId: folderId!, workspaceId: workspace.id }),
-        enabled: !!folderId
+        enabled: !!folderId,
+        retry: false
     })
 
-    const deferredIsLoading = useDeferredLoading(isLoading, { delay: 0, minDuration: 500 })
-    
     useFilesPageClickHandler({
         filesPageContentRef,
         getEntity,
@@ -185,20 +183,24 @@ export const WorkspaceFilesPage = () => {
         clearSelection()
     }, [folderId, clearSelection])
     
+    if (folderId && isError) {
+        return (
+            <LayoutBodyContainer>
+                <NotFoundState
+                    title='Folder not found'
+                    message='This folder doesn’t exist or may have been deleted.'
+                    action={ { label: 'Back to files', to: routes.files } }
+                />
+            </LayoutBodyContainer>
+        )
+    }
+
     if (folderId && !isSuccess) {
         return (
             <LayoutBodyContainer>
-                { deferredIsLoading ? (
-                    <div className='flex grow items-center justify-center text-gray-400'>
-                        <ButtonSpinner className='w-8 h-8 text-gray-300' />
-                    </div>
-                ) : (
-                    <NotFoundState
-                        title='Folder not found'
-                        message='This folder doesn’t exist or may have been deleted.'
-                        action={ { label: 'Back to files', to: routes.files } }
-                    />
-                ) }
+                <div className='flex grow items-center justify-center text-gray-400'>
+                    <ButtonSpinner className='w-8 h-8 text-gray-300' />
+                </div>
             </LayoutBodyContainer>
         )
     }
