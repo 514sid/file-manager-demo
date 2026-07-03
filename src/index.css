@@ -1,0 +1,81 @@
+@import 'tailwindcss';
+
+@theme {
+    --color-primary: #0072f5;
+    --color-primary-lighter: #068bff;
+    --color-primary-darker: #0f62e6;
+    --color-dark: #1E1919;
+
+    --animate-overlayShow: overlayShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+    --animate-contentShow: contentShow 150ms cubic-bezier(0.16, 1, 0.3, 1);
+    --animate-slideDown: slideDown 150ms cubic-bezier(0.87, 0, 0.13, 1);
+    --animate-slideUp: slideUp 150ms cubic-bezier(0.87, 0, 0.13, 1);
+
+    @keyframes overlayShow {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
+    @keyframes contentShow {
+        from {
+            opacity: 0;
+            transform: scale(0.96);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    @keyframes slideDown {
+        from {
+            height: 0px;
+        }
+
+        to {
+            height: var(--radix-accordion-content-height);
+        }
+    }
+
+    @keyframes slideUp {
+        from {
+            height: var(--radix-accordion-content-height);
+        }
+
+        to {
+            height: 0px;
+        }
+    }
+}
+
+@layer base {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+        border-color: var(--color-neutral-200, currentColor);
+    }
+}
+
+body {
+    @apply w-full min-w-[1280px]
+}
+
+.w-trigger {
+    width: var(--radix-select-trigger-width)
+}
+
+.bg-stripes-neutral {
+    background: repeating-linear-gradient(-55deg,
+            #e5e7eb,
+            #e5e7eb 10px,
+            #f3f4f6 10px,
+            #f3f4f6 20px);
+}
